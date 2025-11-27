@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定向钻参数计算器（修正公式版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        /* 作者信息样式 */
+        .author-info {
+            text-align: right;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .input-group label {
+            width: 220px;
+            font-size: 14px;
+            color: #555;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        .result-item span:first-child {
+            color: #555;
+        }
+        .result-item span:last-child {
+            color: #007bff;
+            font-weight: bold;
+        }
+        /* 高亮样式 */
+        .result-item.highlight {
+            background-color: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding-left: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .result-item.highlight span:first-child {
+            color: #0050b3;
+            font-weight: bold;
+        }
+        .result-item.highlight span:last-child {
+            color: #1890ff;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>定向钻参数计算器（修正公式版）</h1>
+        <!-- 作者信息 -->
+        <div class="author-info">南铁设计院：夏昭丹，QQ：792332</div>
+        
+        <!-- 输入区域 -->
+        <div class="input-area">
+            <div class="input-group">
+                <label for="h1">入土点标高 (h1) (m)：</label>
+                <input type="number" id="h1" step="0.01" value="60" placeholder="预设值60">
+            </div>
+            <div class="input-group">
+                <label for="h2">出土点标高 (h2) (m)：</label>
+                <input type="number" id="h2" step="0.01" value="61" placeholder="预设值61">
+            </div>
+            <div class="input-group">
+                <label for="h3">底部最不利点标高 (h3) (m)：</label>
+                <input type="number" id="h3" step="0.01" value="49" placeholder="预设值49">
+            </div>
+            <div class="input-group">
+                <label for="R">曲率半径 (R) (m)：</label>
+                <input type="number" id="R" step="0.01" value="180" placeholder="默认180">
+            </div>
+            <div class="input-group">
+                <label for="α">入土角 (α) (°)：</label>
+                <input type="number" id="α" step="0.01" value="15" placeholder="默认15">
+            </div>
+            <div class="input-group">
+                <label for="β">出土角 (β) (°)：</label>
+                <input type="number" id="β" step="0.01" value="15" placeholder="默认15">
+            </div>
+            <div class="input-group">
+                <label for="L0">底部直线段长度 (L0) (m)：</label>
+                <input type="number" id="L0" step="0.01" value="10" placeholder="预设值10">
+            </div>
+
+            <button onclick="calculate()">点击计算</button>
+        </div>
+
+        <!-- 结果展示区域 -->
+        <div class="result-section" id="result"></div>
+    </div>
+
+    <script>
+        // 核心计算函数（修正a3、c3公式）
+        function calculate() {
+            // 获取输入值并转换为数字（使用预设值兜底）
+            const h1 = parseFloat(document.getElementById('h1').value) || 60;
+            const h2 = parseFloat(document.getElementById('h2').value) || 61;
+            const h3 = parseFloat(document.getElementById('h3').value) || 49;
+            const R = parseFloat(document.getElementById('R').value) || 180;
+            const α = parseFloat(document.getElementById('α').value) || 15;
+            const β = parseFloat(document.getElementById('β').value) || 15;
+            const L0 = parseFloat(document.getElementById('L0').value) || 10;
+
+            // 弧度转换（计算三角函数用）
+            const αRad = α * Math.PI / 180;
+            const βRad = β * Math.PI / 180;
+
+            // 入土端计算
+            const Δh1 = h1 - h3; // 入土端地面与底部直线段高差
+            const b2 = R * (1 - Math.cos(αRad)); // 入土端曲线高度
+            const b1 = Δh1 - b2; // 入土端直线段高度
+            const a2 = R * Math.sin(αRad); // 入土端曲线水平长度
+            const a3 = (α * Math.PI * R) / 180; // 入土端曲线长度
+            const a1 = b1 / Math.tan(αRad); // 入土端直线段水平长度
+            const a4 = b1 / Math.sin(αRad); // 入土端直线段长度
+
+            // 出土端计算
+            const Δh2 = h2 - h3; // 出土端地面与底部直线段高差
+            const d2 = R * (1 - Math.cos(βRad)); // 出土端曲线高度
+            const d1 = Δh2 - d2; // 出土端直线段高度
+            const c1 = R * Math.sin(βRad); // 出土端曲线水平长度
+            const c3 = (β * Math.PI * R) / 180; // 出土端曲线长度
+            const c2 = d1 / Math.tan(βRad); // 出土端直线段水平长度
+            const c4 = d1 / Math.sin(βRad); // 出土端直线段长度
+
+            // 总长度计算
+            const Ls = L0 + a1 + a2 + c1 + c2; // 穿越长度
+            const L = L0 + a3 + a4 + c3 + c4; // 穿越套管长度
+
+            // 整理结果（保留2位小数），指定项高亮
+            const resultData = [
+                { name: '入土端地面与底部直线段高差 (Δh1)', value: Δh1.toFixed(2) + ' m', highlight: false },
+                { name: '入土端曲线高度 (b2)', value: b2.toFixed(2) + ' m', highlight: false },
+                { name: '入土端直线段高度 (b1)', value: b1.toFixed(2) + ' m', highlight: false },
+                { name: '入土端曲线水平长度 (a2)', value: a2.toFixed(2) + ' m', highlight: false },
+                { name: '入土端曲线长度 (a3)', value: a3.toFixed(2) + ' m', highlight: true },
+                { name: '入土端直线段水平长度 (a1)', value: a1.toFixed(2) + ' m', highlight: false },
+                { name: '入土端直线段长度 (a4)', value: a4.toFixed(2) + ' m', highlight: true },
+                { name: '出土端地面与底部直线段高差 (Δh2)', value: Δh2.toFixed(2) + ' m', highlight: false },
+                { name: '出土端曲线高度 (d2)', value: d2.toFixed(2) + ' m', highlight: false },
+                { name: '出土端直线段高度 (d1)', value: d1.toFixed(2) + ' m', highlight: false },
+                { name: '出土端曲线水平长度 (c1)', value: c1.toFixed(2) + ' m', highlight: false },
+                { name: '出土端曲线长度 (c3)', value: c3.toFixed(2) + ' m', highlight: true },
+                { name: '出土端直线段水平长度 (c2)', value: c2.toFixed(2) + ' m', highlight: false },
+                { name: '出土端直线段长度 (c4)', value: c4.toFixed(2) + ' m', highlight: true },
+                { name: '穿越长度 (Ls)', value: Ls.toFixed(2) + ' m', highlight: false },
+                { name: '穿越套管长度 (L)', value: L.toFixed(2) + ' m', highlight: true }
+            ];
+
+            // 渲染结果到页面
+            const resultContainer = document.getElementById('result');
+            resultContainer.innerHTML = ''; // 清空原有结果
+            resultData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = item.highlight ? 'result-item highlight' : 'result-item';
+                div.innerHTML = `<span>${item.name}：</span><span>${item.value}</span>`;
+                resultContainer.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
